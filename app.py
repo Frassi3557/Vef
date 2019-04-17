@@ -1,6 +1,6 @@
-import pymysql
 from flask import Flask, render_template, request, session, redirect, url_for, escape
 from jinja2 import Template
+import psycopg2
 
 app = Flask(__name__)
 
