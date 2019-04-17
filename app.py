@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for, escape
 from jinja2 import Template
 import psycopg2
+import config
 
 app = Flask(__name__)
 
@@ -12,7 +13,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def student():
-   return "render_template('student.tpl')"
+   return config
 
 if __name__ == '__main__':
     app.run()
