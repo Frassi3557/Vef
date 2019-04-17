@@ -1,4 +1,4 @@
-import psycopg2 
+import pymysql
 from flask import Flask, render_template, request, session, redirect, url_for, escape
 from jinja2 import Template
 
