@@ -13,7 +13,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def student():
-   return config
+   return "config.db"
 
 if __name__ == '__main__':
     app.run()
