@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+   <body>
+      <h3>Listi yfir notendur</h3>
+      <table border=1>
+         <tr>
+            <th>Nafn</th>
+            <th>Notendanafn</th>
+         </tr>
+         {% for name in users %}
+            <tr>
+               <td> {{ name[0] }} </td>
+               <td> {{ name[1] }} </td>
+            </tr>
+         {% endfor %}
+      </table>
+   </body>
+</html>
