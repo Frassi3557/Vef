@@ -10,7 +10,15 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 @app.route('/')
 def index7():
-    return render_template("login.html")
+    if 'username' in session:
+        return
+    else:
+        return render_template("login.html")
+
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('index7'))
 
 @app.route('/login', methods = ['GET','POST'])
 def login():
@@ -56,12 +64,12 @@ def login():
     else:
         return redirect(url_for('index7'))
 
-@app.route('/insert', methods = ['GET', 'POST'])
+@app.route('/insert')
 def insert():
-    user = session['username']
-    name = session['name']
-    password = session['password']
     if 'name' and 'username' and 'password' in session:
+        user = session['username']
+        name = session['name']
+        password = session['password']
         sql = "INSERT INTO users(name, username, passw) VALUES(%s, %s, %s)"
         conn = None
         try:
@@ -79,14 +87,15 @@ def insert():
             cur.close()
         except (Exception, psycopg2.DatabaseError) as error:
             print(error)
-            return '''redirect(url_for('register'))'''
+            return error
         finally:
             if conn is not None:
                 conn.close()
         return redirect(url_for('index7'))
-    return '''redirect(url_for('register'))'''
+    else:
+        return redirect(url_for('index7'))
 
-@app.route('/create')
+@app.route('/create' , methods = ['GET', 'POST'])
 def create():
     if 'username' in session:
         user = session['username']
@@ -101,13 +110,15 @@ def create():
             # create a new cursor
             cur = conn.cursor()
             # execute the INSERT statement
-            result = cur.execute(sql)
             cur.execute(sql)
-            print(result)
-            if result != user:
-                return "redirect(url_for('insert'))"
+            result = cur.fetchone()
+            sqluser = "('" + user + "',)"
+            print(sqluser)
+            print(result)   
+            if(result == None):
+                return redirect(url_for('insert'))
             else:
-                return "Notendanafnið ", user," er nú þegar í notkun."
+                return render_template("exists.html")
             # close communication with the database
             cur.close()
         except (Exception, psycopg2.DatabaseError) as error:
@@ -129,30 +140,31 @@ def register():
 
 @app.route('/users')
 def users():
-    sql = "SELECT * FROM users"
-    conn = None
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the INSERT statemendt
-        cur.execute(sql)
-        users = cur.fetchall()
-        #for row in users:
-        #    print(row[0])
-        # close communication with the database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
+    if 'username' in session:
+        sql = "SELECT * FROM users"
+        conn = None
+        try:
+            # read database configuration
+            params = config()
+            # connect to the PostgreSQL database
+            conn = psycopg2.connect(**params)
+            # create a new cursor
+            cur = conn.cursor()
+            # execute the INSERT statemendt
+            cur.execute(sql)
+            users = cur.fetchall()
+            #for row in users:
+            #    print(row[0])
+            # close communication with the database
             cur.close()
-            conn.close()
-        return render_template("index.html",users = users)
-    return """render_template("index.html",users = users)"""
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            if conn is not None:
+                cur.close()
+                conn.close()
+            return render_template("index.html",users = users)
+    return redirect(url_for('index7'))
 
 if __name__ == '__main__':
     app.run()
