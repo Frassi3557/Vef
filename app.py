@@ -10,17 +10,7 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 @app.route('/')
 def index7():
-    #if request.method == 'POST':
-    #    session['username'] = request.form['username']
-    #    session['password'] = request.form['passw']
-    #    return redirect(url_for('login'))
-    return '''
-        <form action="/login" method="POST">
-            <p>Notendanafn: </p><input type=text name=username required>
-            <p>Lykilorð: </p><input type=password name=passw required>
-            <p><input type=submit value=Log-in>
-        </form>
-    '''
+    return render_template("login.html")
 
 @app.route('/login', methods = ['GET','POST'])
 def login():
@@ -40,38 +30,38 @@ def login():
             cur = conn.cursor()
             # execute the INSERT statement
             cur.execute(sql,(user, password))
+            print(cur.execute(sql,(user, password)))
             #cur.execute(sqluserlist)
-            # commit the changes to the database
             users = cur.fetchone()
-            userlist = cur.fetchall()
+            #userlist = cur.fetchall()
             if user == users[1] and password == users[2]:
                 print(users[0])
                 print(users[1])
                 print(users[2])
                 return redirect(url_for("users"))
             else:
-                return redirect(url_for('index7'))
-            print(users[0])
-            print(users[1])
+                return render_template("wrong.html")
             #conn.commit()
             # close communication with the database
             cur.close()
         except (Exception, psycopg2.DatabaseError) as error:
             print(error)
+            return render_template("wrong.html")
         finally:
             if conn is not None:
                 conn.close()
                 #cur.close()
         #return redirect(url_for('users'))
         #return render_template("index.html", users = users, userlist = userlist)
-    return '''render_template("index.html", verify = verify)'''
+    else:
+        return redirect(url_for('index7'))
 
-@app.route('/create' , methods = ['GET', 'POST'])
-def create():
+@app.route('/insert', methods = ['GET', 'POST'])
+def insert():
+    user = session['username']
+    name = session['name']
+    password = session['password']
     if 'name' and 'username' and 'password' in session:
-        user = session['username']
-        name = session['name']
-        password = session['password']
         sql = "INSERT INTO users(name, username, passw) VALUES(%s, %s, %s)"
         conn = None
         try:
@@ -89,11 +79,44 @@ def create():
             cur.close()
         except (Exception, psycopg2.DatabaseError) as error:
             print(error)
+            return '''redirect(url_for('register'))'''
         finally:
             if conn is not None:
                 conn.close()
         return redirect(url_for('index7'))
-    return redirect(url_for('register'))
+    return '''redirect(url_for('register'))'''
+
+@app.route('/create')
+def create():
+    if 'username' in session:
+        user = session['username']
+        sql = "SELECT username from users WHERE username='{}'".format(user)
+        print(sql)
+        conn = None
+        try:
+            # read database configuration
+            params = config()
+            # connect to the PostgreSQL database
+            conn = psycopg2.connect(**params)
+            # create a new cursor
+            cur = conn.cursor()
+            # execute the INSERT statement
+            result = cur.execute(sql)
+            cur.execute(sql)
+            print(result)
+            if result != user:
+                return "redirect(url_for('insert'))"
+            else:
+                return "Notendanafnið ", user," er nú þegar í notkun."
+            # close communication with the database
+            cur.close()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+            return error
+        finally:
+            if conn is not None:
+                conn.close()
+    return 'username not in session'
 
 @app.route('/register' , methods = ['GET', 'POST'])
 def register():
@@ -102,14 +125,7 @@ def register():
         session['username'] = request.form['username']
         session['password'] = request.form['passw']
         return redirect(url_for('create'))
-    return '''
-        <form method="POST">
-            <p>Nafn: </p><input type=text name=name required>
-            <p>Notendanafn: </p><input type=text name=username required>
-            <p>Lykilorð: </p><input type=password name=passw required>
-            <p><input type=submit value=Register>
-        </form>
-    '''
+    return render_template("register.html")
 
 @app.route('/users')
 def users():
@@ -140,33 +156,3 @@ def users():
 
 if __name__ == '__main__':
     app.run()
-
-    
-#def create_tables():
-#    """ create tables in the PostgreSQL database"""
-#    commands = (
-#        """
-#        CREATE TABLE users (
-#            name VARCHAR(50) NOT NULL,
-#            username VARCHAR(32) NOT NULL,
-#            passw VARCHAR(32) NOT NULL
-#        )
-#        """)
-#    conn = None
-#    try:
-#        # read the connection parameters
-#        params = config()
-#        # connect to the PostgreSQL server
-#        conn = psycopg2.connect(**params)
-#        cur = conn.cursor()
-#        # create table one by one
-#        cur.execute(commands)
-#        # close communication with the PostgreSQL database server
-#        cur.close()
-#        # commit the changes
-#        conn.commit()
-#    except (Exception, psycopg2.DatabaseError) as error:
-#        print(error)
-#    finally:
-#        if conn is not None:
-#            conn.close()
