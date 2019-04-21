@@ -24,6 +24,7 @@ def logout():
 def login():
     #if 'username' and 'password' in session:
     if request.method == 'POST':
+        session['username'] = request.form['username']
         user = request.form['username']
         password = request.form['passw']
         sql = "SELECT name,username,passw FROM users WHERE username=%s AND passw=%s"
