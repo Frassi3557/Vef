@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <a href=""><img src="../img/atlantsolia.png"></a>
+    <a href=""><img src="../img/costco.png"></a>
+    <a href=""><img src="../img/daelan.png"></a>
+    <a href=""><img src="../img/n1.png"></a>
+    <a href=""><img src="../img/ob.png"></a>
+    <a href=""><img src="../img/olis.png"></a>
+    <a href=""><img src="../img/orkan.png"></a>
+    <a href=""><img src="../img/orkanx.png"></a>
+    {% for item in gogn['results'] %}
+        <p>{{item.company}}</p>
+    {% endfor %}
+{% endblock %}

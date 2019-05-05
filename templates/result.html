@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+   <body>
+      <table border = 1>
+        <tr>
+            <th>Fyrirtæki</th>
+            <th>Staðsetning</th>
+            <th>Bensín</th>
+            <th>Dísil</th>
+        </tr>
+        {% for item in gogn['results'] %}
+            <tr>
+                <td>{{item.company}}</td>
+                <td>{{item.name}}</td>
+                <td>{{item.bensin95}} kr/l</td>
+                <td>{{item.diesel}} kr/l</td>      
+            </tr>
+        {% endfor %}
+      </table>
+   </body>
+</html>

@@ -3,10 +3,24 @@ from jinja2 import Template
 import psycopg2
 from config import config
 import requests
+import json
+import urllib.request
 
 app = Flask(__name__)
 
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+
+with urllib.request.urlopen('https://apis.is/petrol') as url:
+    gogn = json.loads(url.read().decode())
+    print(gogn)
+
+@app.route('/mid')
+def indexmid():
+    return render_template("result.html", gogn = gogn)
+
+@app.route('/mid/stations')
+def stations():
+    return render_template("stations.html", gogn = gogn)
 
 @app.route('/')
 def index7():
