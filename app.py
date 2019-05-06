@@ -12,7 +12,11 @@ app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
 with urllib.request.urlopen('https://apis.is/petrol') as url:
     gogn = json.loads(url.read().decode())
-    print(gogn)
+    #print(gogn)
+
+#############################################################################
+#                           MIÐANNARVERKEFNI                                #
+#############################################################################
 
 @app.route('/mid')
 def indexmid():
@@ -22,11 +26,31 @@ def indexmid():
 def stations():
     return render_template("stations.html", gogn = gogn)
 
+#############################################################################
+#                             LOKAVERKEFNI                                  #
+#############################################################################
+
+@app.route ('/lokaverkefni')
+def indexloka():
+    return render_template("lokaverkefni/article.html")
+
+@app.route ('/lokaverkefni/login')
+def loginloka():
+    return render_template("#")
+
+@app.route ('/lokaverkefni/register')
+def registerloka():
+    return render_template("#")
+
+#############################################################################
+#                                VERKEFNI 7                                 #
+#############################################################################
+
 @app.route('/')
 def index7():
     if 'username' in session:
-        return redirect(url_for('users'))
-    else:
+        return redirect(url_for('users')) 
+    else: 
         return render_template("login.html")
 
 @app.route('/logout')
