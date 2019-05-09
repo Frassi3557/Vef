@@ -1,9 +1,7 @@
-h1
-{
+*{
     font-family: 'Lato', sans-serif;
 }
 
-.header a
-{
+.header a{
     float: left;
 }

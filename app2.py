@@ -5,8 +5,8 @@ def create_table():
     """ create tables in the PostgreSQL database"""
     commands = (
         """
-        CREATE TABLE notendur (
-            userid INT NOT NULL PRIMARY KEY, 
+        CREATE TABLE notendur(
+            userid INT NOT NULL PRIMARY KEY AUTO INCREMENT, 
             name VARCHAR(50) NOT NULL,
             username VARCHAR(32) NOT NULL,
             passw VARCHAR(32) NOT NULL

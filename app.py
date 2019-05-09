@@ -14,13 +14,17 @@ with urllib.request.urlopen('https://apis.is/petrol') as url:
     gogn = json.loads(url.read().decode())
     #print(gogn)
 
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html')
+
 #############################################################################
 #                           MIÐANNARVERKEFNI                                #
 #############################################################################
 
-@app.route('/mid')
-def indexmid():
-    return render_template("result.html", gogn = gogn)
+@app.route('/mid/<station>', methods=['GET'])
+def indexmid(station):
+    return render_template("result.html", gogn = gogn, station = station)
 
 @app.route('/mid/stations')
 def stations():
@@ -32,15 +36,141 @@ def stations():
 
 @app.route ('/lokaverkefni')
 def indexloka():
-    return render_template("lokaverkefni/article.html")
+    sql = "SELECT * FROM grein"
+    conn = None
+    try:
+        # read database configuration
+        params = config()
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the INSERT statemendt
+        cur.execute(sql)
+        article = cur.fetchall()
+        print(article)
+        #for row in users:
+        #    print(row[0])
+        # close communication with the database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            cur.close()
+            conn.close()
+        return render_template("lokaverkefni/article.html", article = article)
 
 @app.route ('/lokaverkefni/login')
 def loginloka():
-    return render_template("#")
+    #if 'username' and 'password' in session:
+    if request.method == 'POST':
+        session['username'] = request.form['username']
+        user = request.form['username']
+        password = request.form['passw']
+        sql = "SELECT name,username,passw FROM notendur WHERE username=%s AND passw=%s"
+        #sqluserlist = "SELECT name,username FROM users"
+        conn = None
+        try:
+            # read database configuration
+            params = config()
+            # connect to the PostgreSQL database
+            conn = psycopg2.connect(**params)
+            # create a new cursor
+            cur = conn.cursor()
+            # execute the INSERT statement
+            cur.execute(sql,(user, password))
+            print(cur.execute(sql,(user, password)))
+            #cur.execute(sqluserlist)
+            users = cur.fetchone()
+            #userlist = cur.fetchall()
+            if user == users[1] and password == users[2]:
+                print(users[0])
+                print(users[1])
+                print(users[2])
+                return redirect(url_for("indexloka"))
+            else:
+                return render_template("wrong.html")
+            #conn.commit()
+            # close communication with the database
+            cur.close()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+            return render_template("wrong.html")
+        finally:
+            if conn is not None:
+                conn.close()
+                #cur.close()
+        #return redirect(url_for('users'))
+        #return render_template("index.html", users = users, userlist = userlist)
+    else:
+        return redirect(url_for('loginloka'))
 
 @app.route ('/lokaverkefni/register')
 def registerloka():
-    return render_template("#")
+    if request.method == 'POST':
+        session['name'] = request.form['name']
+        session['username'] = request.form['username']
+        session['password'] = request.form['passw']
+        return redirect(url_for('addloka'))
+    return render_template("lokaverkefni/register.html")
+
+@app.route ('/lokaverkefni/insert')
+def insertloka():
+    sql = "INSERT INTO notendur VALUES (1, 'Snorri', 'snorrifras', '123')"
+    conn = None
+    try:
+        print(sql)
+        # read database configuration
+        params = config()
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the INSERT statemendt
+        cur.execute(sql)
+        #for row in users:
+        #    print(row[0])
+        # close communication with the database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            cur.close()
+            conn.close()
+    return render_template("lokaverkefni/base.html")
+
+@app.route ('/lokaverkefni/add')
+def addloka():
+    if 'name' and 'username' and 'password' in session:
+        user = session['username']
+        name = session['name']
+        password = session['password']
+        sql = "INSERT INTO notendur(name, username, passw) VALUES(%s, %s, %s)"
+        conn = None
+        try:
+            # read database configuration
+            params = config()
+            # connect to the PostgreSQL database
+            conn = psycopg2.connect(**params)
+            # create a new cursor
+            cur = conn.cursor()
+            # execute the INSERT statement
+            cur.execute(sql,(name, user, password))
+            # commit the changes to the database
+            conn.commit()
+            # close communication with the database
+            cur.close()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+            return error
+        finally:
+            if conn is not None:
+                conn.close()
+        return redirect(url_for('loginloka'))
+    else:
+        return redirect(url_for('loginloka'))
 
 #############################################################################
 #                                VERKEFNI 7                                 #
