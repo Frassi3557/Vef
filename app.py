@@ -61,15 +61,14 @@ def indexloka():
             conn.close()
         return render_template("lokaverkefni/article.html", article = article)
 
-@app.route ('/lokaverkefni/login')
+@app.route ('/lokaverkefni/login', methods = ['GET','POST'])
 def loginloka():
-    #if 'username' and 'password' in session:
     if request.method == 'POST':
-        session['username'] = request.form['username']
         user = request.form['username']
         password = request.form['passw']
-        sql = "SELECT name,username,passw FROM notendur WHERE username=%s AND passw=%s"
-        #sqluserlist = "SELECT name,username FROM users"
+        print(user, password)
+        sql = "SELECT userid,name,username,passw FROM notendur WHERE username=%s AND passw=%s"
+        #sqluserlist = "SELECT name,username FROM notendur"
         conn = None
         try:
             # read database configuration
@@ -80,17 +79,18 @@ def loginloka():
             cur = conn.cursor()
             # execute the INSERT statement
             cur.execute(sql,(user, password))
-            print(cur.execute(sql,(user, password)))
             #cur.execute(sqluserlist)
             users = cur.fetchone()
             #userlist = cur.fetchall()
-            if user == users[1] and password == users[2]:
+            if user == users[2] and password == users[3]:
+                session['loggedin'] = True
                 print(users[0])
-                print(users[1])
                 print(users[2])
+                print(users[3])
+                session['userid'] = users[0]
                 return redirect(url_for("indexloka"))
             else:
-                return render_template("wrong.html")
+                return "username and passw in session"
             #conn.commit()
             # close communication with the database
             cur.close()
@@ -104,44 +104,50 @@ def loginloka():
         #return redirect(url_for('users'))
         #return render_template("index.html", users = users, userlist = userlist)
     else:
-        return redirect(url_for('loginloka'))
+        return render_template("lokaverkefni/login.html")
 
-@app.route ('/lokaverkefni/register')
+@app.route ('/lokaverkefni/register', methods = ['GET','POST'])
 def registerloka():
     if request.method == 'POST':
+        session['userid'] = request.form['userid']
         session['name'] = request.form['name']
         session['username'] = request.form['username']
         session['password'] = request.form['passw']
-        return redirect(url_for('addloka'))
+        return redirect(url_for('insertloka'))
     return render_template("lokaverkefni/register.html")
 
 @app.route ('/lokaverkefni/insert')
 def insertloka():
-    sql = "INSERT INTO notendur VALUES (1, 'Snorri', 'snorrifras', '123')"
-    conn = None
-    try:
-        print(sql)
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the INSERT statemendt
-        cur.execute(sql)
-        #for row in users:
-        #    print(row[0])
-        # close communication with the database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
+    if 'userid' and 'name' and 'username' and 'password' in session:
+        userid = session['userid']
+        user = session['username']
+        name = session['name']
+        password = session['password']
+        sql = "INSERT INTO notendur VALUES (%s, %s, %s, %s)"
+        conn = None
+        try:
+            print(sql)
+            # read database configuration
+            params = config()
+            # connect to the PostgreSQL database
+            conn = psycopg2.connect(**params)
+            # create a new cursor
+            cur = conn.cursor()
+            # execute the INSERT statemendt
+            cur.execute(sql,(userid, name, user, password))
+            conn.commit()
             cur.close()
-            conn.close()
-    return render_template("lokaverkefni/base.html")
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            if conn is not None:
+                cur.close()
+                conn.close()
+                return "OK"
+    else:
+        return render_template("lokaverkefni/base.html")
 
-@app.route ('/lokaverkefni/add')
+@app.route ('/lokaverkefni/add', methods = ['GET','POST'])
 def addloka():
     if 'name' and 'username' and 'password' in session:
         user = session['username']
@@ -171,6 +177,50 @@ def addloka():
         return redirect(url_for('loginloka'))
     else:
         return redirect(url_for('loginloka'))
+
+@app.route('/lokaverkefni/create-article', methods = ['GET','POST'])
+def createloka():
+    #if not session.get('loggedin'):
+    #    return redirect(url_for('loginloka'))
+    #else:
+    #    session['loggedin'] = True
+    if request.method == 'POST':
+        #articleid = request.form['articleid']
+        content = request.form['content']
+        img = request.form['img']
+        title = request.form['title']
+        userid = session['userid']
+        sqlarticleid = "SELECT articleid FROM grein"
+        sql = "INSERT INTO grein VALUES(%s, %s, %s, %s, %s)"
+        conn = None
+        try:
+            # read database configuration
+            params = config()
+            # connect to the PostgreSQL database
+            conn = psycopg2.connect(**params)
+            # create a new cursor
+            cur = conn.cursor()
+            # execute the INSERT statement
+            cur.execute(sqlarticleid)
+            result = cur.fetchall()
+           # print(result)
+            articleid = max(result)
+            articleid = articleid[0]+1
+            #print(articleid)
+            cur.execute(sql,(articleid, content, img, title, userid))
+            # commit the changes to the database
+            conn.commit()
+            # close communication with the database
+            cur.close()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+            return error
+        finally:
+            if conn is not None:
+                conn.close()
+            return redirect(url_for('indexloka'))
+    else:
+        return render_template('lokaverkefni/new-article.html')
 
 #############################################################################
 #                                VERKEFNI 7                                 #

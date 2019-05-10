@@ -1,0 +1,11 @@
+{% extends "lokaverkefni/base.html" %}
+
+{% block body %}
+<h2>Ný Færsla</h2>
+<form method="POST">
+        <p>Titill: </p><input type=text name=title required>
+        <p>Innihald(50 stafir): </p><textarea name=content required maxlength="50"></textarea>
+        <p>Myndslóð: </p><input type=url name=img required>
+        <p><input type=submit value=Staðfesta>
+</form>
+{% endblock %}
