@@ -34,32 +34,79 @@ def stations():
 #                             LOKAVERKEFNI                                  #
 #############################################################################
 
-@app.route ('/lokaverkefni')
+@app.route ('/lokaverkefni', methods = ['GET','POST'])
 def indexloka():
-    sql = "SELECT * FROM grein"
-    conn = None
-    try:
-        # read database configuration
-        params = config()
-        # connect to the PostgreSQL database
-        conn = psycopg2.connect(**params)
-        # create a new cursor
-        cur = conn.cursor()
-        # execute the INSERT statemendt
-        cur.execute(sql)
-        article = cur.fetchall()
-        print(article)
-        #for row in users:
-        #    print(row[0])
-        # close communication with the database
-        cur.close()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
+    if not session.get('userid'):
+        return redirect(url_for('loginloka'))
+    else:
+        userid = session['userid']
+        sql = "SELECT * FROM grein"
+        conn = None
+        try:
+            # read database configuration
+            params = config()
+            # connect to the PostgreSQL database
+            conn = psycopg2.connect(**params)
+            # create a new cursor
+            cur = conn.cursor()
+            # execute the INSERT statemendt
+            cur.execute(sql)
+            article = cur.fetchall()
+            print(article)
+            #for row in users:
+            #    print(row[0])
+            # close communication with the database
             cur.close()
-            conn.close()
-        return render_template("lokaverkefni/article.html", article = article)
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            if conn is not None:
+                cur.close()
+                conn.close()
+            return render_template("lokaverkefni/article.html", article = article, userid = userid)
+
+@app.route('/lokaverkefni/article/<article>')
+def articleloka(article):
+    return
+
+@app.route('/lokaverkefni/delete/<post>', methods = ['GET','POST'])
+def deleteloka(post):
+    print(post)
+    if not session.get('loggedin'):
+        return "You are not logged in"
+    else:
+        session['loggedin'] = True
+        userid = session['userid']
+        return render_template("lokaverkefni/delete.html", userid = userid)
+    if request.method == 'POST':
+        sql = "DELETE FROM grein WHERE articleid ='{}'".format(post)
+        print(sql)
+        conn = None
+        try:
+            # read database configuration
+            params = config()
+            # connect to the PostgreSQL database
+            conn = psycopg2.connect(**params)
+            # create a new cursor
+            cur = conn.cursor()
+            # execute the INSERT statement
+            cur.execute(sql)
+            conn.commit()
+            # close communication with the database
+            cur.close()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(error)
+        finally:
+            if conn is not None:
+                cur.close()
+                conn.close()
+            return render_template("lokaverkefni/article.html", userid = userid)
+        
+
+@app.route('/lokaverkefni/logout')
+def logoutloka():
+    session.pop('userid', None)
+    return redirect(url_for('indexloka'))
 
 @app.route ('/lokaverkefni/login', methods = ['GET','POST'])
 def loginloka():
@@ -84,11 +131,12 @@ def loginloka():
             #userlist = cur.fetchall()
             if user == users[2] and password == users[3]:
                 session['loggedin'] = True
+                session['userid'] = users[0]
                 print(users[0])
                 print(users[2])
                 print(users[3])
                 session['userid'] = users[0]
-                return redirect(url_for("indexloka"))
+                return redirect(url_for('indexloka'))
             else:
                 return "username and passw in session"
             #conn.commit()
@@ -109,7 +157,6 @@ def loginloka():
 @app.route ('/lokaverkefni/register', methods = ['GET','POST'])
 def registerloka():
     if request.method == 'POST':
-        session['userid'] = request.form['userid']
         session['name'] = request.form['name']
         session['username'] = request.form['username']
         session['password'] = request.form['passw']
@@ -118,12 +165,12 @@ def registerloka():
 
 @app.route ('/lokaverkefni/insert')
 def insertloka():
-    if 'userid' and 'name' and 'username' and 'password' in session:
-        userid = session['userid']
+    if 'name' and 'username' and 'password' in session:
         user = session['username']
         name = session['name']
         password = session['password']
         sql = "INSERT INTO notendur VALUES (%s, %s, %s, %s)"
+        userid = "SELECT userid FROM notendur"
         conn = None
         try:
             print(sql)
@@ -134,6 +181,11 @@ def insertloka():
             # create a new cursor
             cur = conn.cursor()
             # execute the INSERT statemendt
+            cur.execute(userid)
+            result = cur.fetchall()
+            print(result)
+            userid = max(result)
+            userid = userid[0]+1
             cur.execute(sql,(userid, name, user, password))
             conn.commit()
             cur.close()
@@ -191,7 +243,7 @@ def createloka():
         title = request.form['title']
         userid = session['userid']
         sqlarticleid = "SELECT articleid FROM grein"
-        sql = "INSERT INTO grein VALUES(%s, %s, %s, %s, %s)"
+        sql = "INSERT INTO grein VALUES(1, %s, %s, %s, %s)"
         conn = None
         try:
             # read database configuration
@@ -203,11 +255,11 @@ def createloka():
             # execute the INSERT statement
             cur.execute(sqlarticleid)
             result = cur.fetchall()
-           # print(result)
+            print(result)
             articleid = max(result)
             articleid = articleid[0]+1
-            #print(articleid)
-            cur.execute(sql,(articleid, content, img, title, userid))
+            print(articleid)
+            cur.execute(sql,(content, img, title, userid))
             # commit the changes to the database
             conn.commit()
             # close communication with the database
