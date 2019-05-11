@@ -1,15 +1,13 @@
 {% extends "lokaverkefni/base.html" %}
-
 {% block body %}
 {% for item in article %}
-{% if item[4] == userid %}<a href="/lokaverkefni/delete/{{ item[0] }}">Eyða færslu</a>{% endif %}
-<p> Þú ert skráð/ur inn sem: {{ userid }} </p>
 <div class="article">
    <h1 id="title"> {{ item[3] }} </h1>
    <img src="{{ item[2] }}">
    <p id="content"> {{ item[1] }} </p>
    <p id="articleid">Grein númer: {{ item[0] }} </p>
-   <p id="userid">Notandi: {{ item[4] }}</p>
+   <p id="userid">Notandi: <a href="/lokaverkefni/articles/{{ item[4] }}">{{ item[4] }}</a></p>
+   {% if item[4] == userid %}<a href="/lokaverkefni/delete/{{ item[0] }}">Eyða færslu</a>{% endif %}
 </div>
 {% endfor %}
 {% endblock %}

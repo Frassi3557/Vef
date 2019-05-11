@@ -65,43 +65,58 @@ def indexloka():
                 conn.close()
             return render_template("lokaverkefni/article.html", article = article, userid = userid)
 
-@app.route('/lokaverkefni/article/<article>')
-def articleloka(article):
-    return
+@app.route('/lokaverkefni/articles/<user>')
+def articleloka(user):
+    sql = "SELECT * FROM grein WHERE userid ={}".format(user)
+    sqluser = "SELECT name FROM notendur WHERE userid={}".format(user)
+    conn = None
+    try:
+        # read database configuration
+        params = config()
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the INSERT statement
+        cur.execute(sql)
+        article = cur.fetchall()
+        cur.execute(sqluser)
+        user = cur.fetchone()
+        print(article)
+        cur.close()
+        return render_template("lokaverkefni/article.html", article = article, user = sqluser)
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            cur.close()
+            conn.close()
+    return redirect(url_for("indexloka"))
 
 @app.route('/lokaverkefni/delete/<post>', methods = ['GET','POST'])
 def deleteloka(post):
-    print(post)
-    if not session.get('loggedin'):
-        return "You are not logged in"
-    else:
-        session['loggedin'] = True
-        userid = session['userid']
-        return render_template("lokaverkefni/delete.html", userid = userid)
-    if request.method == 'POST':
-        sql = "DELETE FROM grein WHERE articleid ='{}'".format(post)
-        print(sql)
-        conn = None
-        try:
-            # read database configuration
-            params = config()
-            # connect to the PostgreSQL database
-            conn = psycopg2.connect(**params)
-            # create a new cursor
-            cur = conn.cursor()
-            # execute the INSERT statement
-            cur.execute(sql)
-            conn.commit()
-            # close communication with the database
+    sql = "DELETE FROM grein WHERE articleid ='{}'".format(post)
+    print(sql)
+    conn = None
+    try:
+        # read database configuration
+        params = config()
+        # connect to the PostgreSQL database
+        conn = psycopg2.connect(**params)
+        # create a new cursor
+        cur = conn.cursor()
+        # execute the INSERT statement
+        cur.execute(sql)
+        conn.commit()
+        # close communication with the database
+        cur.close()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
             cur.close()
-        except (Exception, psycopg2.DatabaseError) as error:
-            print(error)
-        finally:
-            if conn is not None:
-                cur.close()
-                conn.close()
-            return render_template("lokaverkefni/article.html", userid = userid)
-        
+            conn.close()
+        return render_template("lokaverkefni/article.html")    
 
 @app.route('/lokaverkefni/logout')
 def logoutloka():
@@ -243,7 +258,7 @@ def createloka():
         title = request.form['title']
         userid = session['userid']
         sqlarticleid = "SELECT articleid FROM grein"
-        sql = "INSERT INTO grein VALUES(1, %s, %s, %s, %s)"
+        sql = "INSERT INTO grein VALUES(%s, %s, %s, %s, %s)"
         conn = None
         try:
             # read database configuration
@@ -259,7 +274,7 @@ def createloka():
             articleid = max(result)
             articleid = articleid[0]+1
             print(articleid)
-            cur.execute(sql,(content, img, title, userid))
+            cur.execute(sql,(articleid, content, img, title, userid))
             # commit the changes to the database
             conn.commit()
             # close communication with the database
