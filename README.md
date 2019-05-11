@@ -6,6 +6,7 @@ Stutt samantekt um verkefnið:
     Til að geta séð innihald vefsíðunnar þarf notandi að vera til í gagnagrunni.
     Ef notandi er ekki í session er hann færður í nýskráningu.
     Þegar að notandi er skráður inn getur hann séð færslur frá öðrum notendum.
+    Notandi getur smellt á userid við ákveðna færslu til að sjá allar færslur frá þeim notanda.
     Notandi getur sett inn færslu og einnig eytt þeim úr gagnagrunni, 
         valmöguleiki um að eyða færslum birtist við færslur sem notandi hefur sett inn á síðuna.
     Færslurnar innihalda Titil, mynd og innihaldslýsingu.
